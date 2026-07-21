@@ -4,7 +4,7 @@ const locationBtn = document.getElementById('locationBtn');
 
 const weatherCodes = {
     0: { desc: 'Klar', icon: '☀️' },
-    1: { desc: 'Teilweise bewölkt', icon: '⛅' },
+    1: { desc: 'Teilweise bewölkt', icon: '⛅️' },
     2: { desc: 'Bewölkt', icon: '☁️' },
     3: { desc: 'Bedeckt', icon: '☁️' },
     45: { desc: 'Nebel', icon: '🌫️' },
@@ -42,7 +42,7 @@ async function getWeatherByCoords(lat, lon, cityLabel) {
             const dayInfo = getWeatherInfo(data.daily.weather_code[i]);
             forecastDiv.innerHTML += `
                 <div>
-                    <div>${i==0 ? 'Heute' : 'Tag ' + (i+1)}</div>
+                    <div>${i==0? 'Heute' : 'Tag ' + (i+1)}</div>
                     <div style="font-size:24px">${dayInfo.icon}</div>
                     <div>${Math.round(data.daily.temperature_2m_max[i])}° / ${Math.round(data.daily.temperature_2m_min[i])}°</div>
                 </div>
@@ -50,6 +50,7 @@ async function getWeatherByCoords(lat, lon, cityLabel) {
         }
         document.getElementById('weatherResult').classList.remove('hidden');
     } catch(e) {
+        console.error(e);
         document.getElementById('error').textContent = 'Etwas ist schiefgelaufen, bitte versuche es erneut';
     }
     document.getElementById('loader').classList.add('hidden');
@@ -58,14 +59,19 @@ async function getWeatherByCoords(lat, lon, cityLabel) {
 async function searchCity() {
     const city = cityInput.value.trim();
     if(!city) return;
+
+    document.getElementById('loader').classList.remove('hidden');
+    document.getElementById('error').textContent = '';
+
     try {
         const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
         const data = await res.json();
-        if(!data.results) throw new Error();
+        if(!data.results || data.results.length === 0) throw new Error();
         const loc = data.results[0];
         getWeatherByCoords(loc.latitude, loc.longitude, `${loc.name}, ${loc.country}`);
     } catch {
         document.getElementById('error').textContent = 'Stadt nicht gefunden, versuche einen deutschen oder englischen Namen wie Berlin';
+        document.getElementById('loader').classList.add('hidden');
     }
 }
 
